@@ -1,4 +1,4 @@
-name: Heroku
+name: Railway
 
 on:
   push:
@@ -50,3 +50,15 @@ jobs:
           # Verificar que las imágenes se enviaron correctamente
           echo "Verificando imágenes enviadas a DockerHub:"
           docker-compose -f docker-compose.yml images
+
+  deploy:
+      runs-on: ubuntu-latest
+      container: ghcr.io/railwayapp/cli:latest
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT_ID }}
+      steps:
+        - uses: actions/checkout@v3
+        
+        - name: Deploy Servidor
+          run: railway up --service servidor2 --detach
