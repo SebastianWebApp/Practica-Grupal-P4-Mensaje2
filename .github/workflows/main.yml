@@ -92,7 +92,7 @@ jobs:
              
 
               # Iniciar el contenedor de mensaje2
-              docker run -d --name mensaje2 \            
+              docker run -d --name mensaje2 \
                 --restart always \
                 -p 80:80 \
                 sebastianwebapp/practica_grupal_4p_mensaje2:latest
