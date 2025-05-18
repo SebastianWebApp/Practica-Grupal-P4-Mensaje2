@@ -9,5 +9,5 @@ services:
     container_name: mensaje2
     image: sebastianwebapp/practica_grupal_4p_mensaje2:latest
     ports:
-      - "4001:4001"
+      - "80:80"
     restart: always
