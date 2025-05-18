@@ -5,6 +5,7 @@ on:
     branches:
       - main  # Cambia según sea necesario
 
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -77,25 +78,24 @@ jobs:
 
               
               # Descargar las imágenes desde Docker Hub
-              docker pull sebastianwebapp/red_social_frontend:latest
+              docker pull sebastianwebapp/practica_grupal_4p_mensaje2:latest
 
 
 
            
               # Detener y eliminar contenedores antiguos
-              docker stop base_mongoDB || true
-              docker rm base_mongoDB || true
+              docker stop mensaje2 || true
+              docker rm mensaje2 || true
               
             
   
              
 
-              # Iniciar el contenedor de verificacion_2pasos
-              docker run -d --name verificacion_2pasos \
-                --network app-network \
+              # Iniciar el contenedor de mensaje2
+              docker run -d --name mensaje2 \
                 --restart always \
-                -p 4000:4000 \
-                sebastianwebapp/red_social_verificacion_2pasos:latest
+                -p 80:80 \
+                sebastianwebapp/practica_grupal_4p_mensaje2:latest
   
 
               echo "Despliegue completado exitosamente"
