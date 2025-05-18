@@ -1,4 +1,4 @@
-name: Railway
+name: AWS
 
 on:
   push:
@@ -16,7 +16,10 @@ jobs:
       # Install Docker and Docker Compose
       - name: Install Docker and Docker Compose
         run: |
+          # Actualizar el índice de paquetes
           sudo apt-get update
+
+          # Instalar Docker si no está instalado
           if ! command -v docker &> /dev/null; then
             echo "Docker no encontrado. Instalando..."
             sudo apt-get install -y docker.io
@@ -24,6 +27,7 @@ jobs:
             echo "Docker ya está instalado."
           fi
 
+          # Instalar Docker Compose si no está instalado
           if ! command -v docker-compose &> /dev/null; then
             echo "Docker Compose no encontrado. Instalando..."
             sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -32,6 +36,7 @@ jobs:
             echo "Docker Compose ya está instalado."
           fi
 
+          # Verificar las versiones de Docker y Docker Compose
           docker --version
           docker-compose --version
 
@@ -41,24 +46,57 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}  # Asegúrate de que los secretos estén configurados
           password: ${{ secrets.DOCKER_PASSWORD }}
+          
 
       # Build and push Docker images using Docker Compose
       - name: Build and push Docker images with Docker Compose
         run: |
+          # Construir las imágenes con Docker Compose
           docker-compose -f docker-compose.yml build
-          docker-compose -f docker-compose.yml push
-          # Verificar que las imágenes se enviaron correctamente
-          echo "Verificando imágenes enviadas a DockerHub:"
-          docker-compose -f docker-compose.yml images
 
-  deploy:
+          # Subir las imágenes a Docker Hub
+          docker-compose -f docker-compose.yml push
+
+
+
+
+
+  deploy-to-ec2:
+      needs: build-and-push
       runs-on: ubuntu-latest
-      container: ghcr.io/railwayapp/cli:latest
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT_ID }}
       steps:
-        - uses: actions/checkout@v3
-        
-        - name: Deploy Servidor
-          run: railway up --service servidor2 --detach
+        - name: Trigger redeploy on EC2
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.HOST_DNS }}
+            username: ${{ secrets.USERNAME }}
+            key: ${{ secrets.EC2_SSH_KEY }}
+            script: |
+              echo "Conectando a ${{ secrets.HOST_DNS }} para redeploy"
+
+
+              
+              # Descargar las imágenes desde Docker Hub
+              docker pull sebastianwebapp/red_social_frontend:latest
+
+
+
+           
+              # Detener y eliminar contenedores antiguos
+              docker stop base_mongoDB || true
+              docker rm base_mongoDB || true
+              
+            
+  
+             
+
+              # Iniciar el contenedor de verificacion_2pasos
+              docker run -d --name verificacion_2pasos \
+                --network app-network \
+                --restart always \
+                -p 4000:4000 \
+                sebastianwebapp/red_social_verificacion_2pasos:latest
+  
+
+              echo "Despliegue completado exitosamente"
+              docker ps
